@@ -287,13 +287,13 @@ func (n *natsStreamLayer) Accept() (net.Conn, error) {
 			return nil, err
 		}
 		if msg.Reply == "" {
-			n.logger.Error("[ERR] raft-nats: Invalid connect message (missing reply inbox)")
+			n.logger.Error("Invalid connect message (missing reply inbox)")
 			continue
 		}
 
 		var connect connectRequestProto
 		if err := json.Unmarshal(msg.Data, &connect); err != nil {
-			n.logger.Error("[ERR] raft-nats: Invalid connect message (invalid data)")
+			n.logger.Error("Invalid connect message (invalid data)")
 			continue
 		}
 
@@ -304,7 +304,7 @@ func (n *natsStreamLayer) Accept() (net.Conn, error) {
 		inbox := fmt.Sprintf(natsRequestInbox, n.subjectPrefix, n.localAddr.String(), nats.NewInbox())
 		sub, err := n.conn.Subscribe(inbox, peerConn.msgHandler)
 		if err != nil {
-			n.logger.Error("[ERR] raft-nats: Failed to create inbox for remote peer: %v", err)
+			n.logger.Error("Failed to create inbox for remote peer: %v", err)
 			continue
 		}
 		sub.SetPendingLimits(-1, -1)
@@ -315,12 +315,12 @@ func (n *natsStreamLayer) Accept() (net.Conn, error) {
 			panic(err)
 		}
 		if err := n.conn.Publish(msg.Reply, data); err != nil {
-			n.logger.Error("[ERR] raft-nats: Failed to send connect response to remote peer: %v", err)
+			n.logger.Error("Failed to send connect response to remote peer: %v", err)
 			sub.Unsubscribe()
 			continue
 		}
 		if err := n.conn.FlushTimeout(n.timeout); err != nil {
-			n.logger.Error("[ERR] raft-nats: Failed to flush connect response to remote peer: %v", err)
+			n.logger.Error("Failed to flush connect response to remote peer: %v", err)
 			sub.Unsubscribe()
 			continue
 		}
