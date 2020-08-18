@@ -271,8 +271,10 @@ func (n *natsStreamLayer) Dial(address raft.ServerAddress, timeout time.Duration
 		return nil, err
 	}
 
+	peerConn.mu.Lock()
 	peerConn.sub = sub
 	peerConn.outbox = resp.Inbox
+	peerConn.mu.Unlock()
 	n.mu.Lock()
 	n.conns[peerConn] = struct{}{}
 	n.mu.Unlock()
@@ -298,7 +300,9 @@ func (n *natsStreamLayer) Accept() (net.Conn, error) {
 		}
 
 		peerConn := n.newNATSConn(connect.ID)
+		peerConn.mu.Lock()
 		peerConn.outbox = connect.Inbox
+		peerConn.mu.Unlock()
 
 		// Setup inbox for peer.
 		inbox := fmt.Sprintf(natsRequestInbox, n.subjectPrefix, n.localAddr.String(), nats.NewInbox())
@@ -324,7 +328,9 @@ func (n *natsStreamLayer) Accept() (net.Conn, error) {
 			sub.Unsubscribe()
 			continue
 		}
+		peerConn.mu.Lock()
 		peerConn.sub = sub
+		peerConn.mu.Unlock()
 		n.mu.Lock()
 		n.conns[peerConn] = struct{}{}
 		n.mu.Unlock()
